@@ -1,0 +1,80 @@
+const readline = require('readline');
+
+// Função de busca linear
+function buscaLinear(array, elemento) {
+    for (let i = 0; i < array.length; i++) {
+        if (array[i] === elemento) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+// Função de busca binária recursiva
+function buscaBinariaRecursiva(array, elemento, inicio = 0, fim = array.length - 1, passos = 0) {
+    if (inicio > fim) {
+        // O elemento não foi encontrado
+        return -1;
+    }
+
+    const meio = Math.floor((inicio + fim) / 2);
+    passos++;
+
+    if (array[meio] === elemento) {
+        // O elemento foi encontrado
+        return { indice: meio, passos };
+    } else if (array[meio] > elemento) {
+        return buscaBinariaRecursiva(array, elemento, inicio, meio - 1, passos);
+    } else {
+        // O elemento está na metade superior do intervalo
+        return buscaBinariaRecursiva(array, elemento, meio + 1, fim, passos);
+    }
+}
+
+// Cria uma interface de leitura
+const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout
+});
+
+// Função para medir o tempo de execução
+function medirTempo(callback) {
+    const inicio = process.hrtime();
+    const resultado = callback();
+    const [segundos, nanosegundos] = process.hrtime(inicio);
+    const tempo = (segundos * 1000) + (nanosegundos / 1e6); // Converte para milissegundos
+    return { resultado, tempo };
+}
+
+const paginas = [...Array(400)].map((_, index) => index + 1); // Array com páginas de 1 a 400
+
+// Pergunta ao usuário pelo número da página desejada
+rl.question('Digite o número da página desejada: ', (input) => {
+    const paginaDesejada = parseInt(input);
+
+    // Busca linear
+    const { resultado: indiceLinear, tempo: tempoLinear } = medirTempo(() => buscaLinear(paginas, paginaDesejada));
+
+    // Busca binária
+    const { resultado: resultadoBinaria, tempo: tempoBinaria } = medirTempo(() => buscaBinariaRecursiva(paginas, paginaDesejada));
+
+    if (indiceLinear !== -1) {
+        console.log(`Busca Linear: A página ${paginaDesejada} foi encontrada no índice ${indiceLinear}.`);
+        console.log(`Foram necessários ${indiceLinear + 1} passos para encontrar a página.`);
+        console.log(`Tempo de execução: ${tempoLinear.toFixed(4)} milissegundos.`);
+    } else {
+        console.log(`Busca Linear: A página ${paginaDesejada} não foi encontrada.`);
+    }
+
+    if (resultadoBinaria !== -1) {
+        const numeroPagina = resultadoBinaria.indice + 1;
+        console.log(`Busca Binária: A página ${paginaDesejada} foi encontrada no índice ${resultadoBinaria.indice}.`);
+        console.log(`Corresponde à página ${numeroPagina}.`);
+        console.log(`Foram necessários ${resultadoBinaria.passos} passos para encontrar a página.`);
+        console.log(`Tempo de execução: ${tempoBinaria.toFixed(4)} milissegundos.`);
+    } else {
+        console.log(`Busca Binária: A página ${paginaDesejada} não foi encontrada.`);
+    }
+
+    rl.close();
+});
